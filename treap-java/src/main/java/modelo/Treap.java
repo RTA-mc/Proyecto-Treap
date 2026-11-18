@@ -33,17 +33,17 @@ public class Treap {
     public boolean buscar(int clave) {
     	Nodo n=raiz;
     	while(n!=null) {
-    		if(clave==n.clave) {return true;}
-    		n= (clave>n.clave) ? n.izq : n.der;
+    		if(clave==n.clave) return true;
+    		n= (clave<n.clave) ? n.izq : n.der;
     	}
     	return false;
     }
     
-    private void eliminar(int clave) {
+    public void eliminar(int clave) {
     	raiz= eliminar(raiz,clave);
     }
     public Nodo eliminar(Nodo n , int clave) {
-    	if(n==null) return null;
+    	if(n==null) return null;;
     	if(clave<n.clave) {
     		n.izq=eliminar(n.izq,clave);
     	}else if (clave>n.clave) {
