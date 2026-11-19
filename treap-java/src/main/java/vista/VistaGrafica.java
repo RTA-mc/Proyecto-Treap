@@ -16,10 +16,11 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import modelo.Resultado;
+import modelo.ResultadoComparacion;
 
 public class VistaGrafica {
 
-    /** Gráfica 1: ns por operación vs n. */
+
     private JFreeChart graficaTiempos(List<Resultado> res) {
         XYSeries ins = new XYSeries("Insertar");
         XYSeries bus = new XYSeries("Buscar");
@@ -37,7 +38,6 @@ public class VistaGrafica {
                 "n (número de claves, escala log)", "ns por operación", datos);
     }
 
-    /** Gráfica 2: tiempo / log2(n). Si es O(log n), debería verse casi plana. */
     private JFreeChart graficaRazon(List<Resultado> res) {
         XYSeries ins = new XYSeries("Insertar / log2(n)");
         XYSeries bus = new XYSeries("Buscar / log2(n)");
@@ -86,5 +86,50 @@ public class VistaGrafica {
         dir.mkdirs();
         ChartUtils.saveChartAsPNG(new File(dir, "tiempo_vs_n.png"), graficaTiempos(res), 1000, 600);
         ChartUtils.saveChartAsPNG(new File(dir, "razon_log2n.png"), graficaRazon(res), 1000, 600);
+    }
+    private JFreeChart construirLogY(String titulo, String ejeX, String ejeY, XYSeriesCollection datos) {
+        JFreeChart chart = construir(titulo, ejeX, ejeY, datos);
+        chart.getXYPlot().setRangeAxis(new LogAxis(ejeY));
+        return chart;
+    }
+
+    private JFreeChart graficaAlturas(List<ResultadoComparacion> res) {
+        XYSeries bo = new XYSeries("BST (claves ordenadas)");
+        XYSeries ba = new XYSeries("BST (claves aleatorias)");
+        XYSeries tr = new XYSeries("Treap (claves ordenadas)");
+        for (ResultadoComparacion r : res) {
+            bo.add(r.getN(), r.getAlturaBstOrdenado());
+            ba.add(r.getN(), r.getAlturaBstAleatorio());
+            tr.add(r.getN(), r.getAlturaTreap());
+        }
+        XYSeriesCollection d = new XYSeriesCollection();
+        d.addSeries(bo); d.addSeries(ba); d.addSeries(tr);
+        return construirLogY("Altura del árbol", "n (escala log)", "altura (escala log)", d);
+    }
+
+    private JFreeChart graficaTiemposComparacion(List<ResultadoComparacion> res) {
+        XYSeries bo = new XYSeries("BST (claves ordenadas)");
+        XYSeries ba = new XYSeries("BST (claves aleatorias)");
+        XYSeries tr = new XYSeries("Treap (claves ordenadas)");
+        for (ResultadoComparacion r : res) {
+            bo.add(r.getN(), r.getMsBstOrdenado());
+            ba.add(r.getN(), r.getMsBstAleatorio());
+            tr.add(r.getN(), r.getMsTreap());
+        }
+        XYSeriesCollection d = new XYSeriesCollection();
+        d.addSeries(bo); d.addSeries(ba); d.addSeries(tr);
+        return construirLogY("Tiempo total de insertar n claves", "n (escala log)", "ms (escala log)", d);
+    }
+
+    public void mostrarComparacion(List<ResultadoComparacion> res) {
+        mostrarVentana("Altura", graficaAlturas(res));
+        mostrarVentana("Tiempo de inserción", graficaTiemposComparacion(res));
+    }
+
+    public void guardarPngComparacion(List<ResultadoComparacion> res, String carpeta) throws IOException {
+        File dir = new File(carpeta);
+        dir.mkdirs();
+        ChartUtils.saveChartAsPNG(new File(dir, "comparacion_altura.png"), graficaAlturas(res), 1000, 600);
+        ChartUtils.saveChartAsPNG(new File(dir, "comparacion_tiempo.png"), graficaTiemposComparacion(res), 1000, 600);
     }
 }
